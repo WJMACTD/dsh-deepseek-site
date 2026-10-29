@@ -76,6 +76,25 @@ https://raw.githubusercontent.com/WJMACTD/dsh-deepseek-site/main/publish/index.j
 
 注意：登录快照是**本机行为**——插件把你在内嵌页登录后的凭据快照存在本机应用数据里，跨应用重启回填。它不随插件分发，别人装好后需要自己登录一次，之后重启保持登录。
 
+#### 安装报错怎么办
+
+索引里的版本是 `git` 来源，宿主会先跑一次 `git ls-remote` 预检。两类常见失败：
+
+1. `dsh: connection to github.com timed out after 5000ms` —— 本机 git 走 Windows 的 `schannel` 后端但拿不到凭证（常见于受限网络或证书存储异常）。只对 GitHub 切到 OpenSSL：
+
+   ```bash
+   git config --global http.https://github.com/.sslBackend openssl
+   git -c credential.helper= ls-remote https://github.com/WJMACTD/dsh-deepseek-site.git HEAD
+   ```
+
+   第二条命令能打印出 `b6ab6ee...	HEAD` 就说明预检能过了，再回市场重装。
+
+2. `EPERM ... rename '...dsh-deepseek-site_tmp_*' -> '...dsh-deepseek-site'` —— 你的 profile 里还留着开发期的软链接（junction）指向本机源码目录，pnpm 无法原地替换。删掉那个链接本身（不是删源码目录）后重装：
+
+   ```powershell
+   cmd /c rmdir "C:\Users\<你>\.dsh\profiles\desktop\node_modules\dsh-deepseek-site"
+   ```
+
 ### 从本机源码安装
 
 在本机源码目录下用插件管理器安装（目录名按你的实际路径替换）：

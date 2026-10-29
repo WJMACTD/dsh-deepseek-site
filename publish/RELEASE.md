@@ -87,7 +87,24 @@ git+https://github.com/<owner>/<repo>.git#<40 位 sha>
 - **Electron 权限**：内嵌网页走的是 DSH 主进程的 `browser.acquire` 授权通道（`window.dshDesktop.browser`），与右侧栏 Browser 使用同一套隔离策略（沙箱、禁用 nodeIntegration、仅允许 http/https、下载与权限全部拒绝）。所以它只在 DSH 桌面端生效，Web 端会显示「当前环境不支持内嵌」的提示。
 - **图标**：`icon.svg` 会内联进索引；如果以后换更大的图标，注意 format 1 对内联图标的限制是解码后 ≤32 KiB。
 
-## 5. 版本升级
+## 5. 常见安装失败
+
+索引里的版本是 `git` 来源，宿主在 pnpm 之前会先跑一次 `git ls-remote` 预检（`githubConnectionTimeoutMs`，默认 5 秒）；预检失败会直接中止，pnpm 根本没开始。
+
+**`dsh: connection to github.com timed out after 5000ms`**：本机 git 的 Windows `schannel` 后端拿不到 TLS 凭证（`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`）。只对 GitHub 换成 OpenSSL，不动全局默认值：
+
+```bash
+git config --global http.https://github.com/.sslBackend openssl
+git -c credential.helper= ls-remote https://github.com/<owner>/<repo>.git HEAD
+```
+
+第二条能打印出提交 SHA 就说明预检可过。想回滚这条配置：`git config --global --unset http.https://github.com/.sslBackend`。
+
+**`[ERR_PNPM_EPERM] importPackage ... rename '...dsh-<name>_tmp_*' -> '...dsh-<name>'`**：profile 的 `node_modules/<name>` 是开发期留下的软链接（junction），pnpm 无法原地替换，只能先删链接本身（`cmd /c rmdir "<profile>\node_modules\dsh-deepseek-site"`，删的是链接不是源码目录），再重装。
+
+**`Packages: +1 -N` 且把包移进 `node_modules/.ignored`**：这是失败后的回滚把临时包清掉，跟着上面的原因一起解决即可；它本身不代表依赖被破坏。
+
+## 6. 版本升级
 
 ```bash
 # 1) 改 package.json 的 version
