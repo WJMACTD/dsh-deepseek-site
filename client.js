@@ -6,7 +6,7 @@ window.__ModuleLoader__.load({
 
     /** Locale namespace owned by this plugin. */
     const NS = 'deepseek-site'
-    /** The `sidebar.panellist` id, the `main` key and the `conversation.view` id. */
+    /** The `sidebar.panellist` id and the `main` panel key. */
     const PANEL_ID = 'deepseek-site'
     const SITE_URL = 'https://chat.deepseek.com/'
     /** Prefix every site document shares; the guest also loads about:blank first. */
@@ -267,7 +267,6 @@ window.__ModuleLoader__.load({
 
     const zh = {
       nav: 'DeepSeek 官网',
-      tab: '官网',
       title: 'DeepSeek 官网',
       loading: '正在加载 chat.deepseek.com…',
       reload: '重新加载',
@@ -289,7 +288,6 @@ window.__ModuleLoader__.load({
     }
     const en = {
       nav: 'DeepSeek site',
-      tab: 'DeepSeek',
       title: 'DeepSeek',
       loading: 'Loading chat.deepseek.com…',
       reload: 'Reload',
@@ -382,11 +380,7 @@ window.__ModuleLoader__.load({
       )
     }
 
-    /**
-     * Toolbar: identity, load state, sign-in state and the actions. The
-     * conversation-tab entry renders the compact form, because that strip is
-     * already inside the conversation chrome.
-     */
+    /** Toolbar: identity, load state, sign-in state and the actions. */
     function Toolbar(props) {
       const t = props.t
       const pill = () =>
@@ -418,8 +412,10 @@ window.__ModuleLoader__.load({
           style: {
             display: 'flex',
             alignItems: 'center',
+            flexWrap: 'wrap',
             gap: 8,
-            padding: props.compact ? '0 12px 8px' : '0 16px 10px',
+            rowGap: 8,
+            padding: '0 20px 10px',
             flex: '0 0 auto',
           },
         },
@@ -534,16 +530,16 @@ window.__ModuleLoader__.load({
     }
 
     /* ------------------------------------------------------------------ *
-     * One page for the whole application
+     * The page that lives outside React
      *
      * chat.deepseek.com sends `frame-ancestors 'none'`, so an iframe can never
      * work; the desktop shell's leased `<webview>` guest is the only container
      * allowed to show it. The guest is a separate WebContents, so it survives
      * React remounts — as long as its element stays connected to the document.
      * Therefore the page lives in a body-level container for the whole app
-     * lifetime, and every entry (sidebar icon, main panel, conversation tab)
-     * only repositions that container over its own anchor. Switching entries
-     * never reloads the page: a streaming answer keeps streaming.
+     * lifetime, and the panel only repositions that container over its anchor.
+     * Leaving the panel for another one never reloads the page: a streaming
+     * answer keeps streaming.
      * ------------------------------------------------------------------ */
 
     /** @type {null | ReturnType<typeof createBrowser>} */
@@ -1039,13 +1035,21 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * One entry into the shared page: the main panel (`mode: 'panel'`) and the
-     * conversation tab (`mode: 'conversation'`) differ only in chrome and in how
-     * much of the area the anchor claims.
+     * Head inset for this entry page. Windows reserves the caption row above
+     * every column already, so only the platform that overlays the window lights
+     * (darwin) adds the frame clearance on top of the ordinary inset.
+     */
+    const PAGE_TOP =
+      typeof document !== 'undefined' && document.documentElement.getAttribute('data-platform') === 'darwin'
+        ? 'calc(16px + var(--dsh-frame-top-clearance, 0px))'
+        : '16px'
+
+    /**
+     * The main panel: the chrome (title, state, actions) plus the rectangle the
+     * body-level page should cover.
      */
     function BrowserView(props) {
       const t = props.t
-      const compact = props.mode === 'conversation'
       const anchorRef = React.useRef(null)
       const page = React.useMemo(() => ensureBrowser(), [])
       const [state, setState] = React.useState(() =>
@@ -1089,13 +1093,12 @@ window.__ModuleLoader__.load({
             flexDirection: 'column',
             height: '100%',
             minHeight: 0,
-            padding: compact ? '0' : 'calc(18px + var(--dsh-frame-top-clearance, 0px)) 0 0',
+            padding: PAGE_TOP + ' 0 0',
             background: 'var(--dsw-alias-bg-base)',
           },
         },
         h(Toolbar, {
           t,
-          compact,
           loading: state.status === 'loading',
           remembered: state.remembered,
           restoreNote: state.restoreNote,
@@ -1112,7 +1115,7 @@ window.__ModuleLoader__.load({
               display: showGuest ? 'flex' : 'none',
               flex: '1 1 auto',
               minHeight: 0,
-              margin: compact ? '0 12px 12px' : '0 12px 12px',
+              margin: '0 20px 16px',
               borderRadius: 12,
               overflow: 'hidden',
               border: '1px solid var(--dsw-alias-border-l1)',
@@ -1122,7 +1125,7 @@ window.__ModuleLoader__.load({
           // The page itself is body-level; this element only reports where it goes.
           h('div', {
             ref: anchorRef,
-            'data-deepseek-site-anchor': compact ? 'conversation' : 'panel',
+            'data-deepseek-site-anchor': 'panel',
             style: { display: 'flex', flex: '1 1 auto', minHeight: 0, minWidth: 0 },
           })
         ),
@@ -1160,21 +1163,13 @@ window.__ModuleLoader__.load({
 
         const pageDisposer = ctx.slots.inject('main', () =>
           ctx.slots.register({ name: 'main', key: PANEL_ID, locale: NS, inject: () => ({ t }) }, () =>
-            h(BrowserView, { t, mode: 'panel' })
-          )
-        )
-
-        const tabDisposer = ctx.slots.inject('conversation.view', () =>
-          ctx.slots.register(
-            { name: 'conversation.view', id: PANEL_ID, order: 25, label: () => t('tab') },
-            () => h(BrowserView, { t, mode: 'conversation' })
+            h(BrowserView, { t })
           )
         )
 
         ctx.effect(() => () => {
           if (typeof markDisposer === 'function') markDisposer()
           if (typeof pageDisposer === 'function') pageDisposer()
-          if (typeof tabDisposer === 'function') tabDisposer()
         }, 'deepseek-site: slot registrations')
 
         ctx.effect(() => () => {

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "DeepSeek site",
-    "description": "Opens the official DeepSeek chat page (chat.deepseek.com) inside the app: a sidebar icon, a full main panel and a conversation tab all share one live page instance, so switching away never reloads it or interrupts a streaming answer; sign-in survives restarts and off-site links go to the system browser."
+    "description": "A sidebar entry that opens the official DeepSeek chat page (chat.deepseek.com) in the app's main panel, without leaving for the system browser: switching to another panel and back never reloads it or drops a streaming answer, sign-in survives restarts, and off-site links go to the system browser."
   }
 }
