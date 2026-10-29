@@ -71,11 +71,11 @@
       "versions": [
         {
           "version": "1.5.0",
-          "publishTimestamp": 1793264060,
+          "publishTimestamp": 1793265192,
           "source": {
             "type": "git",
             "url": "https://github.com/WJMACTD/dsh-deepseek-site",
-            "commit": "4bdfb028ab6c0dcc13228fa4c7255b643ae8def0"
+            "commit": "c472bd49a9cd61fa1f3ad63fbb4d37cf37495ecf"
           },
           "engines": {
             "dsh": ">=0.2.1-rc.2 <0.3.0"
