@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "DeepSeek site",
+    "description": "A left-sidebar entry that opens the official DeepSeek chat page (chat.deepseek.com) inside the app window's central panel, without leaving for the system browser, and keeps the sign-in across restarts."
+  }
+}

@@ -1,0 +1,14 @@
+# Dependencies (dev-only tooling for the index generator)
+node_modules/
+publish/node_modules/
+publish/package-lock.json
+
+# Local scratch
+*.tgz
+*.log
+.npmcache/
+.dsh-tmp/
+
+# Temporary API-push scratch
+.gitpush/
+.gitpush*

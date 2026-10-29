@@ -1,0 +1,87 @@
+{
+  "format": 1,
+  "title": {
+    "en": "dsh-deepseek-site index",
+    "zh": "dsh-deepseek-site 索引"
+  },
+  "description": {
+    "en": "Plugin index for dsh-deepseek-site.",
+    "zh": "dsh-deepseek-site 的插件索引。"
+  },
+  "metadata": {
+    "categories": {
+      "ui-experience": {
+        "title": {
+          "en": "UI & experience",
+          "zh": "界面与体验"
+        }
+      },
+      "integrations": {
+        "title": {
+          "en": "Integrations",
+          "zh": "集成与分享"
+        }
+      }
+    },
+    "labels": {
+      "webview": {
+        "title": {
+          "en": "Webview",
+          "zh": "内嵌网页"
+        }
+      },
+      "deepseek": {
+        "title": {
+          "en": "DeepSeek",
+          "zh": "DeepSeek"
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "dsh-deepseek-site",
+      "title": {
+        "en": "DeepSeek Site in the sidebar",
+        "zh": "左侧栏 DeepSeek 官网"
+      },
+      "description": {
+        "en": "Adds a left-sidebar entry that embeds chat.deepseek.com inside the app window and keeps the sign-in across restarts.",
+        "zh": "在左侧栏增加一个入口，把 chat.deepseek.com 内嵌到应用窗口内，并跨重启保留登录。"
+      },
+      "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4IiB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJEZWVwU2VlayBzaXRlIHNob3J0Y3V0Ij4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idGlsZSIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM1QTc5RkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzM1MkU2Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjMwIiBmaWxsPSJ1cmwoI3RpbGUpIi8+CiAgPHBhdGggZD0iTTIyIDYwYTEyIDEyIDAgMCAxIDEyLTEyaDM0YTEyIDEyIDAgMCAxIDEyIDEydjE0YTEyIDEyIDAgMCAxLTEyIDEySDUybC0xOCAxNCAyLTE0aC0yYTEyIDEyIDAgMCAxLTEyLTEyeiIgZmlsbD0iI0ZGRkZGRiIvPgogIDxnIGZpbGw9IiMzQjU3RDgiPgogICAgPGNpcmNsZSBjeD0iNDAiIGN5PSI2NyIgcj0iNC4yIi8+CiAgICA8Y2lyY2xlIGN4PSI1MiIgY3k9IjY3IiByPSI0LjIiLz4KICAgIDxjaXJjbGUgY3g9IjY0IiBjeT0iNjciIHI9IjQuMiIvPgogIDwvZz4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik04MiA0NiAxMDggMjAiLz4KICAgIDxwYXRoIGQ9Ik04OCAyMGgyMHYyMCIvPgogIDwvZz4KPC9zdmc+Cg==",
+      "author": "KLY",
+      "repository": {
+        "url": "https://github.com/example/dsh-deepseek-site"
+      },
+      "metadata": {
+        "category": "ui-experience",
+        "keywords": [
+          "deepseek",
+          "webview",
+          "sidebar",
+          "official site",
+          "login"
+        ],
+        "labels": [
+          "webview",
+          "deepseek"
+        ]
+      },
+      "versions": [
+        {
+          "version": "1.5.0",
+          "publishTimestamp": 1793263913,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/example/dsh-deepseek-site",
+            "commit": "0123456789abcdef0123456789abcdef01234567"
+          },
+          "engines": {
+            "dsh": ">=0.2.1-rc.2 <0.3.0"
+          }
+        }
+      ]
+    }
+  ]
+}

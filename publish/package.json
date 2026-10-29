@@ -1,0 +1,13 @@
+{
+  "name": "dsh-deepseek-site-publish",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only tooling that regenerates and validates the format-1 market index for dsh-deepseek-site.",
+  "scripts": {
+    "build": "node build-index.mjs"
+  },
+  "devDependencies": {
+    "semver": "^7.7.0"
+  }
+}

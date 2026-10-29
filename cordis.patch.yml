@@ -1,0 +1,3 @@
+- insert:
+    - id: deepseek-site
+      name: 'dsh-deepseek-site'
