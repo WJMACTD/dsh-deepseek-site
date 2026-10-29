@@ -43,7 +43,7 @@ node publish/build-index.mjs \
   --index-url https://raw.githubusercontent.com/<owner>/<repo>/main/publish/index.json
 ```
 
-- 省略 `--commit` 时自动取当前 `HEAD`，即上面那次提交；也可以显式传 `--commit <40 位 sha>`。
+- 省略 `--commit` 时自动取当前 `HEAD`，即上面那次提交；也可以显式传 `--commit <40 位 sha>`（受限 shell 里 git 子进程可能被拦，这时显式传 SHA）。
 - 命令会加载**从 DSH 安装包里取出的真实校验器** `parseMarketIndex`，不合法会直接失败，不会写出坏索引。
 - 生成的 `publish/index.json` 里 `icon` 是内联的 `data:image/svg+xml;base64,...`（约 1.1 kB），索引是单文件，不需要另一个图标文件。
 

@@ -59,9 +59,11 @@ if (gitUrl && !/^https:\/\/[^/]+(\/[^/]+){2,}$/u.test(gitUrl)) {
 function headCommit() {
   try {
     return execFileSync('git', ['-C', pluginDir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-  } catch {
+  } catch (error) {
+    const reason = error.code ?? error.status ?? 'unknown error'
     throw new Error(
-      '--commit is required: the plugin directory has no git HEAD. Commit and push first, then rerun, or pass --commit <sha>.',
+      `--commit is required: could not read git HEAD (${reason}). ` +
+        'Commit and push first, pass --commit <sha> explicitly, or run outside a restricted shell.',
     )
   }
 }

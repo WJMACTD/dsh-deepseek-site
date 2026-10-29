@@ -58,6 +58,20 @@
 
 ## 安装 / 更新
 
+### 从插件市场安装（推荐，给其他人用）
+
+插件已经发布成一个 format-1 市场索引，地址：
+
+```text
+https://raw.githubusercontent.com/WJMACTD/dsh-deepseek-site/main/publish/index.json
+```
+
+在 DSH 里打开**插件 → 发现 → 添加索引源**，粘贴上面的地址，然后搜索「DeepSeek 官网」安装即可。装完左侧图标栏出现入口，点开在中央面板里加载 `chat.deepseek.com`。
+
+注意：登录快照是**本机行为**——插件把你在内嵌页登录后的凭据快照存在本机应用数据里，跨应用重启回填。它不随插件分发，别人装好后需要自己登录一次，之后重启保持登录。
+
+### 从本机源码安装
+
 在本机源码目录下用插件管理器安装（目录名按你的实际路径替换）：
 
 ```text
@@ -65,6 +79,10 @@ plugin_manager(action="install_bundle", target="<插件目录的绝对路径>")
 ```
 
 装好后按 `Ctrl+R` 重新加载窗口即可生效；若图标未出现，重启 Harness 桌面版。
+
+### 自己发布一份索引
+
+见 [`publish/RELEASE.md`](./publish/RELEASE.md)（从提交、推送、生成索引到版本升级的完整清单）。
 
 ## 测试
 
