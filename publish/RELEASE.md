@@ -62,6 +62,12 @@ git push
 在对方的 DSH 里：**插件 → 发现 → 添加索引源**，填：
 
 ```text
+https://cdn.jsdelivr.net/gh/<owner>/<repo>@main/publish/index.json
+```
+
+国内网络直连 `raw.githubusercontent.com` 常常超时（本机实测就是超时），所以默认给 jsDelivr 镜像；能直连 GitHub 的话，原文地址同样可用：
+
+```text
 https://raw.githubusercontent.com/<owner>/<repo>/main/publish/index.json
 ```
 
@@ -75,10 +81,10 @@ git+https://github.com/<owner>/<repo>.git#<40 位 sha>
 
 ## 4. 注意事项
 
-- **必须用 `raw.githubusercontent.com` 直链**，不能用 `github.com/.../raw/...`：宿主会拒绝 302 跳转的索引地址。
+- **索引地址不能 302 跳转**：宿主拒绝重定向，所以别用 `github.com/.../raw/...`。`raw.githubusercontent.com` 与 jsDelivr 都是直接 200。
+- **jsDelivr 有缓存**：`@main` 分支的缓存约 12 小时（`s-maxage=43200`）。刚发布新版本对方看不到时，可以访问 `https://purge.jsdelivr.net/gh/<owner>/<repo>@main/publish/index.json` 清缓存，或让对方删掉索引源重新添加。
 - **登录快照是本机行为**：插件把 `chat.deepseek.com` 的 `userToken` 快照存在本机 DSH 应用的 localStorage 里，跨应用重启回填。它不会随插件分发给别人，也不该分发——别人装好后需要自己登录一次，之后重启就保持登录。
 - **Electron 权限**：内嵌网页走的是 DSH 主进程的 `browser.acquire` 授权通道（`window.dshDesktop.browser`），与右侧栏 Browser 使用同一套隔离策略（沙箱、禁用 nodeIntegration、仅允许 http/https、下载与权限全部拒绝）。所以它只在 DSH 桌面端生效，Web 端会显示「当前环境不支持内嵌」的提示。
-- **索引缓存**：市场端会缓存索引，重新生成后如果对方看不到新版本，让对方在「添加索引源」里删掉再加一次。
 - **图标**：`icon.svg` 会内联进索引；如果以后换更大的图标，注意 format 1 对内联图标的限制是解码后 ≤32 KiB。
 
 ## 5. 版本升级
@@ -87,9 +93,11 @@ git+https://github.com/<owner>/<repo>.git#<40 位 sha>
 # 1) 改 package.json 的 version
 # 2) 重新生成索引（publishTimestamp 会更新）
 node publish/build-index.mjs --git https://github.com/<owner>/<repo> \
-  --index-url https://raw.githubusercontent.com/<owner>/<repo>/main/publish/index.json
+  --index-url https://cdn.jsdelivr.net/gh/<owner>/<repo>@main/publish/index.json
 # 3) 一起提交
 git add package.json publish/index.json && git commit -m "release: v1.5.1" && git push
+# 4) 想让对方立刻看到，清一次 jsDelivr 缓存
+curl https://purge.jsdelivr.net/gh/<owner>/<repo>@main/publish/index.json
 ```
 
 同一插件只保留一条记录、`versions` 里可以放多个版本；宿主按 SemVer 降序取可用项。

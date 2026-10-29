@@ -5,10 +5,10 @@
 A format-1 DSH plugin market index. Add it in **Plugins → Discover → Add index source**.
 
 ```text
-https://raw.githubusercontent.com/<owner>/<repo>/main/publish/index.json
+https://cdn.jsdelivr.net/gh/<owner>/<repo>@main/publish/index.json
 ```
 
-> 把 `<owner>/<repo>` 换成你自己的仓库。必须用 `raw.githubusercontent.com` 直连地址，不要用 `github.com/.../raw/...` 的重定向地址——宿主拒绝重定向。
+> 把 `<owner>/<repo>` 换成你自己的仓库。默认给 jsDelivr 镜像是因为国内直连 `raw.githubusercontent.com` 经常超时；能直连时原文地址 `https://raw.githubusercontent.com/<owner>/<repo>/main/publish/index.json` 等价。两种都不能用 `github.com/.../raw/...` 的重定向地址——宿主拒绝重定向。
 
 ## 收录的插件
 

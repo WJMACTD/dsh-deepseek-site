@@ -63,6 +63,12 @@
 插件已经发布成一个 format-1 市场索引，地址：
 
 ```text
+https://cdn.jsdelivr.net/gh/WJMACTD/dsh-deepseek-site@main/publish/index.json
+```
+
+如果所在网络能直连 GitHub，也可以用原文地址（jsDelivr 只是镜像，两者内容一样）：
+
+```text
 https://raw.githubusercontent.com/WJMACTD/dsh-deepseek-site/main/publish/index.json
 ```
 
