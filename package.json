@@ -1,7 +1,7 @@
 {
   "name": "dsh-deepseek-site",
-  "version": "1.5.0",
-  "description": "Left-sidebar entry that embeds the DeepSeek official chat site inside the app window and remembers the sign-in. · 左侧栏直达 DeepSeek 官网（应用内嵌 + 登录记忆）。",
+  "version": "1.6.0",
+  "description": "Embed the DeepSeek official chat site inside the app: one live page instance behind a sidebar icon, a main panel and a conversation tab, kept alive across switches, with sign-in that survives restarts. · 应用内直达 DeepSeek 官网：三入口共用同一页面实例，切走不重载，重启免登录。",
   "type": "module",
   "icon": "icon.svg",
   "license": "MIT",
@@ -10,7 +10,9 @@
     "dsh-plugin",
     "deepseek-harness",
     "webview",
-    "sidebar"
+    "sidebar",
+    "tabs",
+    "keep-alive"
   ],
   "engines": {
     "dsh": ">=0.2.1-rc.2 <0.3.0"

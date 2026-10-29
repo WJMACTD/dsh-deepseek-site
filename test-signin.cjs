@@ -15,9 +15,9 @@ if (start < 0 || end < 0 || end <= start) throw new Error('could not locate help
 const declarations = source.slice(start, end)
 const api = new Function(
   declarations +
-    '\nreturn { SITE_URL, SITE_ORIGIN, SNAPSHOT_KEYS, MAX_VALUE_LENGTH, DIAG_LIMIT, isSiteUrl, pickUrl,' +
+    '\nreturn { SITE_URL, SITE_ORIGIN, SNAPSHOT_KEYS, MAX_VALUE_LENGTH, DIAG_LIMIT, EXTERNAL_DEDUPE_MS, isSiteUrl, pickUrl,' +
     ' shouldCapture, minimizeSnapshot, CAPTURE_SCRIPT, CLEAR_SCRIPT, TOKEN_EXPR, restoreScript, tokenValue,' +
-    ' writeDiag, readSignIn, writeSignIn, forgetSignIn }',
+    ' writeDiag, readSignIn, writeSignIn, forgetSignIn, stripElectronToken, planExternalOpen }',
 )()
 
 /** Minimal localStorage stand-in shared by the guest and the application document. */
@@ -172,4 +172,41 @@ assert.strictEqual(api.shouldCapture('hidden', '{"a":1}', null), false)
 assert.strictEqual(api.shouldCapture('visible', '', null), false)
 assert.strictEqual(api.shouldCapture('visible', '{}', null), false)
 
-console.log('sign-in snapshot logic OK: capture, minimize, restore, clear, gating, trail, url judging')
+// ---- user agent: only the Electron product token is dropped ---------------
+const ua =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' +
+  'app/0.2.1-rc.3 Chrome/140.0.0.0 Electron/38.0.0 Safari/537.36'
+const agent = api.stripElectronToken(ua)
+assert.strictEqual(agent.indexOf('Electron/'), -1, 'the Electron token must be stripped')
+assert.ok(agent.indexOf('Chrome/140.0.0.0') >= 0, 'the Chromium version must stay honest')
+assert.ok(agent.indexOf('Safari/537.36') >= 0)
+assert.ok(agent.indexOf('Windows NT 10.0') >= 0)
+assert.strictEqual(api.stripElectronToken(''), '')
+assert.strictEqual(api.stripElectronToken(null), '')
+
+// ---- off-site links: site stays inside, repeats are deduped ---------------
+const now = 1000000
+assert.strictEqual(
+  api.planExternalOpen('https://platform.deepseek.com/usage', null, now),
+  'https://platform.deepseek.com/usage',
+  'an off-site https link must leave the app'
+)
+assert.strictEqual(api.planExternalOpen('https://chat.deepseek.com/a/chat', null, now), null, 'the site must stay inside')
+assert.strictEqual(api.planExternalOpen('http://example.com/', null, now), null, 'plain http must not be forwarded')
+assert.strictEqual(api.planExternalOpen('mailto:someone@example.com', null, now), null)
+assert.strictEqual(api.planExternalOpen('', null, now), null)
+const previous = { url: 'https://example.com/x', at: now }
+assert.strictEqual(
+  api.planExternalOpen('https://example.com/x', previous, now + api.EXTERNAL_DEDUPE_MS - 1),
+  null,
+  'one click must not open twice'
+)
+assert.strictEqual(
+  api.planExternalOpen('https://example.com/x', previous, now + api.EXTERNAL_DEDUPE_MS),
+  'https://example.com/x',
+  'the dedupe window must expire'
+)
+
+console.log(
+  'sign-in snapshot logic OK: capture, minimize, restore, clear, gating, trail, url judging, user agent, external links'
+)

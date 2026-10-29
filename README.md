@@ -4,12 +4,35 @@
 
 ## 功能
 
-- 左侧图标栏出现「官网」入口（外链箭头图标，`order: 3`）。
-- 点击后在中央面板内嵌官网，面板自带工具栏：重新加载、在系统浏览器打开（兜底）。
-- 同一个 `WORKSPACE_KEY` 复用同一个 guest 分区，面板来回切换不丢登录态。
-- 应用重启后自动回填上次的登录快照，免重复登录。
-- 工具栏「忘记本机登录」可清除本机保存的凭据。
-- 运行环境没有 `window.dshDesktop.browser`（例如普通浏览器里打开 Web UI）时，面板显示说明卡片并给出兜底按钮，不静默跳转。
+三个入口，一个页面实例：
+
+| 入口 | 位置 | 适合 |
+| --- | --- | --- |
+| **左侧图标栏** | 「插件」「插件市场」之后（`order: 3`，外链箭头图标） | 全屏用、随时进出 |
+| **中央面板** | 点左侧图标后打开的全屏页面 | 沉浸式，左侧栏仍可操作 |
+| **会话视图标签** | 会话区顶部「对话｜轨迹｜上下文」旁的「官网」 | 边聊边查，跟着当前会话走 |
+
+- **切走不卸载**：页面常驻在 `document.body` 上，三个入口只是把同一个容器挪到自己的位置上。切到别的面板或标签再回来，对话、滚动位置、**正在生成的回答**都还在原处。
+- 面板自带工具栏：重新加载、在系统浏览器打开（兜底）、忘记本机登录。
+- 同一个 `WORKSPACE_KEY` 复用同一个 guest 分区，进程内一直在。
+- 应用重启后自动回填上次的登录快照，免重复登录；回填期间盖一层遮罩，看不到登录页闪烁。
+- 白名单导航：`chat.deepseek.com` 站内跳转留在内嵌页，站外 https 链接交给系统浏览器，2 秒内同一个地址只开一次。
+- UA 只去掉 `Electron/<版本>` 这一个产品标记，平台/内核/版本原样保留（站点风控偶尔会拦 Electron 容器）。
+- 运行环境没有 `window.dshDesktop.browser`（例如普通浏览器里打开 Web UI）时，入口显示说明卡片并给出兜底按钮，不静默跳转。
+
+## 和同类内嵌插件比
+
+同类插件（`dsh-webchat`、`dsh-webview`、`dsh-dschat`、`dsh-chat-mode`）各解决了一部分问题。本插件把它们的优点合到一个实现里：
+
+| 能力 | 本插件 |
+| --- | --- |
+| 入口 | 左侧图标栏 + 中央面板 + 会话视图标签，三处共用同一实例 |
+| 切面板 / 切标签 | 不卸载，流式回答不中断 |
+| 跨应用重启保持登录 | 快照存应用文档，重启回填，回填期有遮罩 |
+| 站内 / 站外导航 | 白名单，站外交给系统浏览器，2 秒去重 |
+| UA | 只去掉 `Electron/<版本>`，不冒充别的浏览器 |
+| 忘记登录 | 一键清应用快照 + guest 凭据，两边一起清 |
+| 没有桌面桥时 | 显示说明卡片，不静默跳转 |
 
 ## 登录记忆
 
@@ -51,7 +74,7 @@
 | `package.json` | bundle 清单：`dsh.bundle.patch`、`exports`、`dsh.client` |
 | `cordis.patch.yml` | 把 `deepseek-site` 这一行插入 profile |
 | `index.js` | 宿主侧 `apply() {}`（空实现，仅为满足 bundle 入口） |
-| `client.js` | 客户端模块：注册 `sidebar.panellist` 图标 + `main` 面板，内嵌 webview 逻辑 |
+| `client.js` | 客户端模块：注册 `sidebar.panellist` 图标 + `main` 面板 + `conversation.view` 标签，一处 guest 实例的内嵌逻辑 |
 | `locale/zh.json`、`locale/en.json` | 插件市场展示用的 `meta.title` / `meta.description`（界面文案内联在 `client.js`，平台只从 locale JSON 读 `meta`） |
 | `icon.svg` | 128×128 原创图标 |
 | `test-signin.cjs` | 登录快照逻辑的单元测试 |
@@ -126,4 +149,9 @@ node --check client.js && node --check index.js
 node test-signin.cjs
 ```
 
-`test-signin.cjs` 从 `client.js` 里切片取出**真实的**声明（不是副本），在伪造的 `localStorage` 上验证：捕获白名单、`tokenValue`、`minimizeSnapshot`（含超长值）、回填四态（空 guest / 已登录 / 登出标记 / 被删 token）、`CLEAR_SCRIPT` 只清两个键、应用侧读写/忘记往返、诊断环形缓冲与字段白名单、`pickUrl` / `isSiteUrl`、`shouldCapture` 的可见性与去重门控。
+`test-signin.cjs` 从 `client.js` 里切片取出**真实的**声明（不是副本），在伪造的 `localStorage` 上验证：捕获白名单、`tokenValue`、`minimizeSnapshot`（含超长值）、回填四态（空 guest / 已登录 / 登出标记 / 被删 token）、`CLEAR_SCRIPT` 只清两个键、应用侧读写/忘记往返、诊断环形缓冲与字段白名单、`pickUrl` / `isSiteUrl`、`shouldCapture` 的可见性与去重门控、UA 只剥 Electron 标记、站外链接白名单与 2 秒去重。
+
+## 更新日志
+
+- **1.6.0** —— 一个页面实例三个入口（左侧图标栏 / 中央面板 / 会话视图标签）；页面常驻 `document.body`，切走不卸载、流式回答不中断；回填期遮罩；站外链接 2 秒去重；UA 只剥 `Electron/<版本>`；`test-signin.cjs` 增加 UA 与站外链接用例。
+- **1.5.0** —— 首次发布：左侧入口 + 中央面板内嵌 `chat.deepseek.com`，登录快照跨重启回填，工具栏提供重新加载 / 系统浏览器兜底 / 忘记本机登录，市场索引与预构建包。
