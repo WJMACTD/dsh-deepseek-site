@@ -118,3 +118,59 @@ curl https://purge.jsdelivr.net/gh/<owner>/<repo>@main/publish/index.json
 ```
 
 同一插件只保留一条记录、`versions` 里可以放多个版本；宿主按 SemVer 降序取可用项。
+
+## 7. 预构建包（可选，但强烈建议）
+
+索引里的版本是 `git` 来源，用户装的时候要先过 `git ls-remote` 预检——本机遇到的那两次失败（schannel 凭证、profile 软链接）都出在这一步。发一个预构建包就能完全绕开 git：
+
+```bash
+npm pack --cache .dsh-tmp/npm-cache
+# 资产名故意不带版本号，latest/download 才长期有效
+cp dsh-deepseek-site-<version>.tgz dsh-deepseek-site.tgz
+gh release create v<version> dsh-deepseek-site.tgz --title "v<version>" --notes "…"
+```
+
+之后这个地址长期可用（每次发版覆盖同名资产即可）：
+
+```text
+https://github.com/<owner>/<repo>/releases/latest/download/dsh-deepseek-site.tgz
+```
+
+在 DSH 的**添加插件**里它和 npm 包名、Git 地址并列被接受（包名 / Git 地址 / 压缩包 / 本地绝对路径）。`package.json` 里没有 `@deepseek-ai/*` 依赖，所以包内无需 `peerDependencies` 处理。
+
+## 8. 收录进 awesome-dsh-plugin
+
+[`awesome-dsh-plugin`](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 是社区插件列表，`dsh-market` 的货架与截图都从这里取。收录是**一个 PR 加一个文件**，README 由对方脚本生成，不要手工改。
+
+条目已经按它的格式写好：[`WJMACTD__dsh-deepseek-site.yml`](./WJMACTD__dsh-deepseek-site.yml)。提交位置是对方仓库的 `data/plugins/WJMACTD__dsh-deepseek-site.yml`。
+
+对方 CI 的硬性检查（按顺序）：
+
+| 检查 | 我们这边 |
+| --- | --- |
+| 仓库声明 `dsh.bundle` | ✅ `package.json` 有 `dsh.bundle.patch` + 根目录 `cordis.patch.yml` |
+| 仓库创建满 1 天 | ⏳ 仓库 2026-10-29 16:53 建，10-30 16:53 之后才达标 |
+| 加 `dsh-plugin` topic | ✅ 已加（另有 `deepseek-harness`、`webview`） |
+| 有真实可用代码 | ✅ 947 行 client 半 + 单测 `test-signin.cjs` |
+| 一个 PR ≤3 条 | ✅ 只提交 1 条 |
+
+提交步骤：
+
+```bash
+gh repo fork awesome-dsh-plugin/awesome-dsh-plugin --clone=false
+gh repo clone WJMACTD/awesome-dsh-plugin -- --depth 1
+cp publish/WJMACTD__dsh-deepseek-site.yml awesome-dsh-plugin/data/plugins/
+cd awesome-dsh-plugin && git checkout -b add-wjmactd-deepseek-site \
+  && git add data/plugins/WJMACTD__dsh-deepseek-site.yml \
+  && git commit -m "Add WJMACTD/dsh-deepseek-site" && git push -u origin add-wjmactd-deepseek-site
+gh pr create --title "Add WJMACTD/dsh-deepseek-site" --body "…"
+```
+
+注意几点：
+
+- **别手工改 README**，也别在本地跑生成脚本后一起提交——历史上 218/296 个 PR 就是这么变成冲突的。
+- **图标**必须是 GitHub 托管位图：`assets/icon-180.png` 已就位，SVG 会被拒。
+- **截图**可选且随时能加、不用再提 PR：在仓库根放 `screenshots.json`（1–8 张图），下一次构建自动生效。
+- **同类条目已经有好几个**（`jaychang1989/dsh-webchat` 与本插件功能几乎一致，10 星且在维护；另有 `Jakcet/dsh-dschat`、`YokiMohan/dsh-webview`、`Starp1ume/dsh-chat-mode`）。规则是「同类撞车时谁更好收录谁，不是先来后到」，但同类重复是评审时最容易被并掉的一条——提交时把差异讲清楚（白名单式登录快照、可手动「忘记本机登录」、15 秒增量捕获、失败回退卡片、预构建 tarball 免 git 安装）。
+- CI 红不一定是你的问题：`READMEs match data/plugins` 落后由维护者合并时重生成；`gate` 一栏是 `—` 说明分支冲突，需要维护者 rebase。
+

@@ -76,6 +76,16 @@ https://raw.githubusercontent.com/WJMACTD/dsh-deepseek-site/main/publish/index.j
 
 注意：登录快照是**本机行为**——插件把你在内嵌页登录后的凭据快照存在本机应用数据里，跨应用重启回填。它不随插件分发，别人装好后需要自己登录一次，之后重启保持登录。
 
+#### 直接装预构建包（完全不走 git）
+
+本机 git 连 GitHub 不稳时（见下面第 1 类报错），可以完全绕开 git：市场详情页会优先展示预构建包，也可以把下面这个地址直接粘进**添加插件**（它接受包名、Git 地址、压缩包或本地路径）：
+
+```text
+https://github.com/WJMACTD/dsh-deepseek-site/releases/latest/download/dsh-deepseek-site.tgz
+```
+
+资产名不带版本号，所以 `latest` 永远指向最新一版的包。
+
 #### 安装报错怎么办
 
 索引里的版本是 `git` 来源，宿主会先跑一次 `git ls-remote` 预检。两类常见失败：
