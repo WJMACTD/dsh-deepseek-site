@@ -8,7 +8,7 @@ url: https://github.com/WJMACTD/dsh-deepseek-site
 name: WJMACTD/dsh-deepseek-site
 category: ui
 description:
-  en: "Adds a left-sidebar entry that renders the official chat.deepseek.com page in the center panel through the desktop shell's native browser guest, keeps the page's own model picker and history, and restores a saved sign-in snapshot after a restart. Desktop only; where the guest bridge is missing it shows an unsupported notice instead of opening a browser."
-  zh: "在左侧栏加一个入口，用桌面端原生浏览器访客在中央面板里渲染 chat.deepseek.com 官方页面，保留官方的模型选择与历史记录，并在重启后回填保存的登录快照。仅桌面端；宿主没有该访客桥接时显示不支持提示，而不是跳系统浏览器。"
+  en: "Embeds the official chat.deepseek.com page in the app through the desktop shell's native browser guest, with three entries (left-rail icon, main panel, conversation tab) sharing ONE live page instance: switching away never unloads it, so a streaming answer keeps going, and an in-progress PWA-like state is preserved. Sign-in is snapshotted locally and replayed before the site boots, so a restart lands already signed in; off-site links go to the system browser. Desktop only; where the guest bridge is missing it shows an unsupported notice instead of opening a browser."
+  zh: "用桌面端原生浏览器访客在应用内渲染 chat.deepseek.com 官方页面，三个入口（左侧图标、中央面板、会话标签）共用同一个页面实例：切走不卸载，流式回答不会中断，页面状态也一直保留。登录快照存在本机，并在站点脚本启动前回填，重启后直接是登录态；站外链接交给系统浏览器。仅桌面端；宿主没有该访客桥接时显示不支持提示，而不是跳系统浏览器。"
 icon: https://raw.githubusercontent.com/WJMACTD/dsh-deepseek-site/main/assets/icon-180.png
 tarball: https://github.com/WJMACTD/dsh-deepseek-site/releases/latest/download/dsh-deepseek-site.tgz

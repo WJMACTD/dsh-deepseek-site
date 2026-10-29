@@ -109,12 +109,12 @@ const index = {
     {
       name: manifest.name,
       title: {
-        en: 'DeepSeek Site in the sidebar',
-        zh: '左侧栏 DeepSeek 官网',
+        en: 'DeepSeek site: one live page, three entries',
+        zh: 'DeepSeek 官网：一个页面，三处入口',
       },
       description: {
-        en: 'Adds a left-sidebar entry that embeds chat.deepseek.com inside the app window and keeps the sign-in across restarts.',
-        zh: '在左侧栏增加一个入口，把 chat.deepseek.com 内嵌到应用窗口内，并跨重启保留登录。',
+        en: 'Embeds chat.deepseek.com in the app: a sidebar icon, a main panel and a conversation tab share one live page, so switching away never reloads it or drops a streaming answer; the sign-in survives restarts.',
+        zh: '把 chat.deepseek.com 内嵌进应用：左侧图标、中央面板、会话标签三处入口共用同一个页面，切走不重载、流式回答不中断，重启后免登录。',
       },
       ...(icon ? { icon } : {}),
       ...(author ? { author } : {}),
@@ -122,7 +122,7 @@ const index = {
       ...(repositoryUrl ? { repository: { url: repositoryUrl } } : {}),
       metadata: {
         category: 'ui-experience',
-        keywords: ['deepseek', 'webview', 'sidebar', 'official site', 'login'],
+        keywords: ['deepseek', 'webview', 'sidebar', 'official site', 'login', 'keep alive', 'tabs'],
         labels: ['webview', 'deepseek'],
       },
       versions: [
