@@ -73,6 +73,8 @@
 | `locale/zh.json`、`locale/en.json` | 插件市场展示用的 `meta.title` / `meta.description`（界面文案内联在 `client.js`，平台只从 locale JSON 读 `meta`） |
 | `icon.svg` | 128×128 原创图标 |
 | `test-signin.cjs` | 登录快照逻辑的单元测试 |
+| `docs/architecture.md` | 时序图：点开入口、切走保活、重启回填，以及容器结构与状态机 |
+| `docs/pitfalls.md` | 本机（Windows 沙箱 + 这个 profile）踩过的环境坑速查 |
 
 ## 安装 / 更新
 

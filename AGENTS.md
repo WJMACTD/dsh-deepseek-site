@@ -79,6 +79,8 @@
 | `publish/RELEASE.md` | 发布清单：预检、push、生成索引、收录 awesome、常见安装失败、版本升级 |
 | `publish/WJMACTD__dsh-deepseek-site.yml` | awesome-dsh-plugin 的收录条目（category `ui`，icon 用 180px PNG raw，tarball 用 latest 链接） |
 | `README.md` | 用户视角：功能、和同类插件对比、安装、隐私与凭据、文件表、更新日志 |
+| `docs/architecture.md` | 时序图与状态机：点开入口、切走保活、重启回填、容器结构、7 条不变量 |
+| `docs/pitfalls.md` | 本机环境坑速查（13 条，带症状/判断/命令） |
 
 ## 4. 开发与验证
 

@@ -174,3 +174,20 @@ gh pr create --title "Add WJMACTD/dsh-deepseek-site" --body "…"
 - **同类条目已经有好几个**（`jaychang1989/dsh-webchat` 与本插件功能几乎一致，10 星且在维护；另有 `Jakcet/dsh-dschat`、`YokiMohan/dsh-webview`、`Starp1ume/dsh-chat-mode`）。规则是「同类撞车时谁更好收录谁，不是先来后到」，但同类重复是评审时最容易被并掉的一条——提交时把差异讲清楚（白名单式登录快照、可手动「忘记本机登录」、15 秒增量捕获、失败回退卡片、预构建 tarball 免 git 安装）。
 - CI 红不一定是你的问题：`READMEs match data/plugins` 落后由维护者合并时重生成；`gate` 一栏是 `—` 说明分支冲突，需要维护者 rebase。
 
+## 9. 附录：本机环境坑
+
+发布链上最容易卡住的不是代码，而是这台机器的沙箱与网络。完整版（含每条的症状、判断方法与可直接执行的命令）在 [../docs/pitfalls.md](../docs/pitfalls.md)，这里只列会直接影响发布的几条：
+
+| 坑 | 一句话 |
+| --- | --- |
+| 写文件 `EPERM` | 目录只继承了上一会话的沙箱 SID；用 `diagnose-windows-sandbox-acl` 修，或改用 `write`/`edit` 工具写 |
+| `%TEMP%` 不可写 | 临时产物一律放 `.dsh-tmp\`（已 gitignore） |
+| HTTPS 全挂 | schannel 无凭证（`SEC_E_NO_CREDENTIALS`）：查网页用 `node fetch`/`web_fetch`，`git` 加 `-c http.sslBackend=openssl` |
+| push 认证 | 用 `x-access-token@` 拼 URL + `gh auth token`；`extraHeader` 形式不稳；stderr 的 `couldn't create signal pipe` 可忽略 |
+| `github.com:443` 间歇不通 | 先 `Test-NetConnection github.com -Port 443` 再重试，别怀疑凭证 |
+| 装了却回滚 | 真因在 `.plugin-manager\logs\github-connection-*\git.log`，`pnpm.log` 结尾是正常的 |
+| 旧 junction | `cmd /c rmdir "<profile>\node_modules\dsh-deepseek-site"` 只删链接 |
+| 索引是旧版 | 刷 jsDelivr 后**再取一次**核对 `versions[0].version` |
+| 读 asar | 头部是 Chrome pickle，JSON 从第 16 字节开始 |
+| 界面验证 | 沙箱禁输入注入、UIA 拿不到 Chromium 控件，交互只能请人点一次；`-Region` 用物理像素 |
+
