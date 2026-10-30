@@ -17,7 +17,7 @@ const api = new Function(
   declarations +
     '\nreturn { SITE_URL, SITE_ORIGIN, SNAPSHOT_KEYS, MAX_VALUE_LENGTH, DIAG_LIMIT, EXTERNAL_DEDUPE_MS, isSiteUrl, pickUrl,' +
     ' shouldCapture, minimizeSnapshot, CAPTURE_SCRIPT, CLEAR_SCRIPT, TOKEN_EXPR, restoreScript, tokenValue,' +
-    ' writeDiag, readSignIn, writeSignIn, forgetSignIn, stripElectronToken, planExternalOpen }',
+    ' writeDiag, readSignIn, writeSignIn, forgetSignIn, stripElectronToken, agentLooksClean, UA_PROBE, planExternalOpen }',
 )()
 
 /** Minimal localStorage stand-in shared by the guest and the application document. */
@@ -145,14 +145,20 @@ assert.strictEqual(app.getItem('deepseek-site:diag:v1'), null, 'forget must drop
 
 // ---- diagnostic trail is a bounded ring of local-only fields --------------
 for (let i = 0; i < api.DIAG_LIMIT + 5; i += 1) {
-  api.writeDiag({ at: new Date(2026, 0, 1, 0, 0, i).toISOString(), note: 'miss', attempts: i, tokenLen: 0 })
+  api.writeDiag({
+    at: new Date(2026, 0, 1, 0, 0, i).toISOString(),
+    note: 'miss',
+    attempts: i,
+    tokenLen: 0,
+    uaOk: i % 2 === 0,
+  })
 }
 const trail = JSON.parse(app.getItem('deepseek-site:diag:v1'))
 assert.strictEqual(trail.length, api.DIAG_LIMIT, 'trail must be capped')
 assert.strictEqual(trail[trail.length - 1].attempts, api.DIAG_LIMIT + 4, 'trail must keep the newest entry')
 for (const entry of trail) {
   for (const key of Object.keys(entry)) {
-    assert.ok(['at', 'note', 'attempts', 'tokenLen'].includes(key), 'trail leaked field ' + key)
+    assert.ok(['at', 'note', 'attempts', 'tokenLen', 'uaOk'].includes(key), 'trail leaked field ' + key)
   }
 }
 
@@ -183,6 +189,15 @@ assert.ok(agent.indexOf('Safari/537.36') >= 0)
 assert.ok(agent.indexOf('Windows NT 10.0') >= 0)
 assert.strictEqual(api.stripElectronToken(''), '')
 assert.strictEqual(api.stripElectronToken(null), '')
+
+// ---- UA probe: the read-back is judged by the site's own substring test ----
+assert.strictEqual(api.agentLooksClean('Mozilla/5.0 … Chrome/140.0.0.0 Safari/537.36'), true)
+assert.strictEqual(api.agentLooksClean(agent), true, 'the stripped agent must read as clean')
+assert.strictEqual(api.agentLooksClean(ua), false, 'the shell agent must read as dirty')
+assert.strictEqual(api.agentLooksClean(''), false, 'an empty read-back proves nothing')
+assert.strictEqual(api.agentLooksClean(null), false)
+// The site's check is case-insensitive in spirit: any casing must be caught.
+assert.strictEqual(api.agentLooksClean('Mozilla/5.0 electron/38.0.0'), false)
 
 // ---- off-site links: site stays inside, repeats are deduped ---------------
 const now = 1000000

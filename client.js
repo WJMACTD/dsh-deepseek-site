@@ -194,6 +194,12 @@ window.__ModuleLoader__.load({
       return url
     }
 
+    /**
+     * Read the guest's own user agent back. Judging happens locally, so the
+     * probe stays a pure expression and holds no policy of its own.
+     */
+    const UA_PROBE = 'String(navigator.userAgent)'
+
     /** Log a recoverable failure without swallowing it silently. */
     function warn(label, error) {
       try {
@@ -204,9 +210,19 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * @param ua - the guest's live `navigator.userAgent`, as read back from the
+     *   page.
+     * @returns whether the override actually landed, i.e. whether the Electron
+     *   product token the site looks for is gone.
+     */
+    function agentLooksClean(ua) {
+      return typeof ua === 'string' && ua !== '' && !/electron/i.test(ua)
+    }
+
+    /**
      * Append one local-only diagnostic entry. The trail deliberately holds no
      * token, no response body and no cookie names.
-     * @param entry - `{ at, note, attempts, tokenLen }`.
+     * @param entry - `{ at, note, attempts, tokenLen, uaOk }`.
      */
     function writeDiag(entry) {
       try {
@@ -285,6 +301,9 @@ window.__ModuleLoader__.load({
       restoreSaved: '已回填登录',
       restoreLive: '登录有效',
       restoreMiss: '无登录快照',
+      agentBad: 'UA 未生效',
+      agentBadHint:
+        '页面读回的浏览器标识里仍带 Electron 标记，站点可能因此弹出「使用环境异常」。这不影响登录快照；请反馈给插件作者。',
     }
     const en = {
       nav: 'DeepSeek site',
@@ -309,6 +328,9 @@ window.__ModuleLoader__.load({
       restoreSaved: 'Sign-in replayed',
       restoreLive: 'Sign-in active',
       restoreMiss: 'No saved sign-in',
+      agentBad: 'UA override missed',
+      agentBadHint:
+        'The browser identifier read back from the page still carries the Electron token, so the site may show its“使用环境异常”dialog. The saved sign-in is unaffected; please report this to the plugin author.',
     }
 
     /**
@@ -460,6 +482,26 @@ window.__ModuleLoader__.load({
               },
               noteText
             ),
+        props.agentNote === 'bad'
+          ? h(
+              'span',
+              {
+                title: t('agentBadHint'),
+                style: {
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: 22,
+                  padding: '0 8px',
+                  borderRadius: 999,
+                  border: '1px solid var(--dsw-alias-border-l1)',
+                  color: 'var(--dsw-alias-label-secondary)',
+                  fontSize: 11,
+                  whiteSpace: 'nowrap',
+                },
+              },
+              t('agentBad')
+            )
+          : null,
         props.remembered ? h(ToolbarButton, { onClick: props.onForget, title: t('forgetHint') }, t('forget')) : null,
         props.showGuest ? h(ToolbarButton, { onClick: props.onReload, title: t('reload') }, t('reload')) : null,
         h(ToolbarButton, { onClick: props.onExternal, title: t('external') }, t('external'))
@@ -580,10 +622,22 @@ window.__ModuleLoader__.load({
         detail: '',
         remembered: readSignIn() !== null,
         restoreNote: '',
+        /**
+         * Outcome of reading the guest's UA back: '' until probed, then 'ok'
+         * (the Electron token is gone) or 'bad' (the override did not land, so
+         * the site's「使用环境异常」dialog is expected).
+         */
+        agentNote: '',
       }
       const subscribers = new Set()
       const emit = () => {
-        const snapshot = { status: state.status, detail: state.detail, remembered: state.remembered, restoreNote: state.restoreNote }
+        const snapshot = {
+          status: state.status,
+          detail: state.detail,
+          remembered: state.remembered,
+          restoreNote: state.restoreNote,
+          agentNote: state.agentNote,
+        }
         subscribers.forEach((fn) => {
           try {
             fn(snapshot)
@@ -596,6 +650,13 @@ window.__ModuleLoader__.load({
       let alive = true
       let guest = null
       let lease = null
+      /**
+       * The UA the guest must present. The site's「使用环境异常」check is a
+       * literal substring test for `electron` in `navigator.userAgent`, and the
+       * guest inherits the shell's UA (`… Chrome/… Electron/… Safari/…`), so the
+       * Electron product token has to go before the site's own script runs.
+       */
+      let agent = ''
       let loaded = false
       let replayed = false
       let restoreAttempts = 0
@@ -644,6 +705,51 @@ window.__ModuleLoader__.load({
       const note = (value) => {
         state.restoreNote = value
         emit()
+      }
+
+      /** Record the UA probe result and repaint, without spamming the trail. */
+      const setAgentNote = (uaOk) => {
+        const next = uaOk ? 'ok' : 'bad'
+        if (state.agentNote === next) return
+        state.agentNote = next
+        emit()
+      }
+
+      /**
+       * Read the guest's own `navigator.userAgent` back. The UA override can fail
+       * silently (a shell without the method channel, or a navigation that
+       * reverted to the shell UA), and that failure is precisely what brings the
+       *「使用环境异常」dialog back — so the panel states the outcome instead of
+       * leaving it to guesswork.
+       * @param done - called once with whether the Electron token is gone.
+       */
+      const probeAgent = (done) => {
+        const fallback = () => {
+          // No executeJavaScript: judge the UA we asked for, not the one live.
+          done(agentLooksClean(agent))
+        }
+        if (guest === null || typeof guest.executeJavaScript !== 'function') {
+          fallback()
+          return
+        }
+        try {
+          const running = guest.executeJavaScript(UA_PROBE)
+          if (running === null || running === undefined || typeof running.then !== 'function') {
+            fallback()
+            return
+          }
+          running
+            .then((live) => {
+              if (!alive) return
+              done(agentLooksClean(live))
+            })
+            .catch(() => {
+              if (!alive) return
+              fallback()
+            })
+        } catch (_error) {
+          fallback()
+        }
       }
 
       /**
@@ -747,9 +853,24 @@ window.__ModuleLoader__.load({
           })
       }
 
-      /** `dom-ready` fires for the placeholder first; the site load starts here. */
-      const load = () => {
-        if (guest === null || !alive || loaded) return
+      /**
+       * `dom-ready` fires for the placeholder first and for every later
+       * document load. Two jobs, in this order:
+       *   1. re-assert the UA through the method channel — the attribute only
+       *      covered the guest's very first navigation, and a `reload()` or an
+       *      in-app navigation would otherwise fall back to the shell's UA;
+       *   2. start the site load, once.
+       */
+      const applyAgentThenLoad = () => {
+        if (guest === null || !alive) return
+        if (agent !== '') {
+          try {
+            guest.setUserAgent(agent)
+          } catch (error) {
+            warn('user agent override failed', error)
+          }
+        }
+        if (loaded) return
         loaded = true
         try {
           guest.loadURL(SITE_URL).catch((error) => {
@@ -792,6 +913,15 @@ window.__ModuleLoader__.load({
           }
           lease = reservation.lease
           const element = document.createElement('webview')
+          // The `useragent` attribute is the only way to set the UA *before* the
+          // guest's first navigation: Electron reads it while it builds the
+          // guest and hands it to the initial `loadURL`. It only takes effect
+          // once the element is attached, so it is written here, ahead of
+          // `src`, to make the intent unambiguous. The `setUserAgent()` method
+          // is not an alternative: it throws until `dom-ready` has fired,
+          // which is already after that first load.
+          agent = stripElectronToken(typeof navigator === 'undefined' ? '' : navigator.userAgent)
+          if (agent !== '') element.setAttribute('useragent', agent)
           element.setAttribute('name', lease)
           element.setAttribute('partition', reservation.partition)
           element.setAttribute('allowpopups', '')
@@ -799,15 +929,7 @@ window.__ModuleLoader__.load({
           element.setAttribute('data-sidebar-browser-frame', 'webview')
           element.style.cssText =
             'display:flex;flex:1 1 auto;width:100%;height:100%;min-height:0;border:0;background:transparent;'
-          const agent = stripElectronToken(typeof navigator === 'undefined' ? '' : navigator.userAgent)
-          if (agent !== '' && typeof element.setUserAgent === 'function') {
-            try {
-              element.setUserAgent(agent)
-            } catch (error) {
-              warn('user agent override failed', error)
-            }
-          }
-          element.addEventListener('dom-ready', load, { signal: signals.signal })
+          element.addEventListener('dom-ready', applyAgentThenLoad, { signal: signals.signal })
           element.addEventListener(
             'did-fail-load',
             (event) => {
@@ -833,16 +955,23 @@ window.__ModuleLoader__.load({
               } catch (error) {
                 warn('snapshot probe failed', error)
               }
-              const key = state.restoreNote + '|' + restoreAttempts + '|' + tokenLen
-              if (key !== lastDiagKey) {
+              // Read the UA back from the guest: an override that silently
+              // failed is exactly what brings the「使用环境异常」dialog back,
+              // and no other signal in this panel can tell the two apart.
+              probeAgent((uaOk) => {
+                if (!alive) return
+                const key = state.restoreNote + '|' + restoreAttempts + '|' + tokenLen + '|' + uaOk
+                if (key === lastDiagKey) return
                 lastDiagKey = key
                 writeDiag({
                   at: new Date().toISOString(),
                   note: state.restoreNote,
                   attempts: restoreAttempts,
                   tokenLen,
+                  uaOk,
                 })
-              }
+                setAgentNote(uaOk)
+              })
             },
             { signal: signals.signal }
           )
@@ -911,6 +1040,7 @@ window.__ModuleLoader__.load({
           detail: state.detail,
           remembered: state.remembered,
           restoreNote: state.restoreNote,
+          agentNote: state.agentNote,
         }),
         subscribe(fn) {
           subscribers.add(fn)
@@ -1054,7 +1184,7 @@ window.__ModuleLoader__.load({
       const page = React.useMemo(() => ensureBrowser(), [])
       const [state, setState] = React.useState(() =>
         page === null
-          ? { status: 'unsupported', detail: '', remembered: false, restoreNote: '' }
+          ? { status: 'unsupported', detail: '', remembered: false, restoreNote: '', agentNote: '' }
           : page.getState()
       )
       const [generation, setGeneration] = React.useState(0)
@@ -1102,6 +1232,7 @@ window.__ModuleLoader__.load({
           loading: state.status === 'loading',
           remembered: state.remembered,
           restoreNote: state.restoreNote,
+          agentNote: state.agentNote,
           showGuest,
           onReload: () => page && page.reload(),
           onForget: () => page && page.forget(),

@@ -29,14 +29,16 @@ sequenceDiagram
     V->>B: ensureBrowser() + attach(anchor)
     B->>M: bridge.acquire('dsh-deepseek-site')
     M-->>B: { lease, partition }
-    B->>B: createElement('webview')，设 name/partition/allowpopups/src=about:blank#lease
+    B->>B: createElement('webview')，先设 useragent（去掉 Electron 标记），再设 name/partition/allowpopups/src=about:blank#lease
     B->>M: 插入 body 容器（触发 attach）
     M->>M: will-attach-webview 校验 lease/partition/未 attach
     M->>M: 强制偏好：sandbox、contextIsolation、拒权限、拒下载
     G-->>B: dom-ready
+    B->>G: setUserAgent(去标记 UA)，覆盖之后的 reload / 站内跳转
     B->>G: loadURL('https://chat.deepseek.com/')
     G-->>B: did-finish-load
     B->>B: status='loading'，遮罩遮住
+    B->>G: executeJavaScript(String(navigator.userAgent))，回读 UA 自检
     alt 有快照
         B->>G: executeJavaScript(restoreScript(snapshot))
         B->>G: reload()
@@ -143,3 +145,4 @@ stateDiagram-v2
 5. **导航白名单**：只有 `chat.deepseek.com` 留在 guest 内；站外 https 一律 `window.open` 交给系统浏览器，2 s 内同址去重（`EXTERNAL_DEDUPE_MS`）。
 6. **面板卸载 ≠ 销毁**：切面板只 `detach`；只有插件被卸载/禁用才 `destroy()`（同时清 interval、断开 `AbortController`、`element.remove()`）。
 7. **遮罩只在未 ready 时遮**：回填会触发一次 `reload()`，遮罩是防登录页闪烁的唯一手段，别在 `loading` 阶段提前撤。
+8. **UA 必须在首次导航前就位**：站点「使用环境异常」的判断是 UA 里有没有 `electron` 字样。`useragent` 属性在 `src` 之前写入才会被 `createGuest` 的首次 `loadURL` 采用；`setUserAgent()` 方法在 `dom-ready` 前调用必抛 `Invalid guestInstanceId`，只能用于之后的 reload / 站内跳转。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-deepseek-site",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Embed the DeepSeek official chat site inside the app window from a sidebar entry, kept alive across panel switches, with sign-in that survives restarts. · 左侧栏直达 DeepSeek 官网：中央面板内嵌，切走不重载，重启免登录。",
   "type": "module",
   "icon": "icon.svg",
