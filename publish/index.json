@@ -72,12 +72,12 @@
       },
       "versions": [
         {
-          "version": "1.6.1",
-          "publishTimestamp": 1793268768,
+          "version": "1.6.2",
+          "publishTimestamp": 1793325297,
           "source": {
             "type": "git",
             "url": "https://github.com/WJMACTD/dsh-deepseek-site",
-            "commit": "c4dc42f0111937570a7546dd1b110a15f9afae03"
+            "commit": "31cae716c0a91ea6ef21c63882dbffa9a4d84da0"
           },
           "engines": {
             "dsh": ">=0.2.1-rc.2 <0.3.0"
