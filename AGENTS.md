@@ -7,10 +7,10 @@
 
 一个 DSH 桌面端插件 `dsh-deepseek-site`：在 Harness 左侧图标栏加一个入口，点开在**应用窗口内部的中央面板**里用 Electron `<webview>` 内嵌 `https://chat.deepseek.com/`，不跳系统浏览器，并且**跨应用重启保留登录**（本地快照 + 回填）。
 
-- 版本：`1.6.1`（`package.json`）
+- 版本：`1.6.2`（`package.json`）
 - 仓库：`https://github.com/WJMACTD/dsh-deepseek-site`（public，账号 `WJMACTD`）
-- 已发布：release `v1.6.1`（Latest），资产名固定为 `dsh-deepseek-site.tgz`（不带版本号，`releases/latest/download/` 永久可用）
-- 本机状态：profile `desktop`（`C:\Users\15139\.dsh\profiles\desktop`）依赖 `github:WJMACTD/dsh-deepseek-site#c4dc42f…`，`dsh.profile.bundles` 里有 `dsh-deepseek-site`，已 `applied`
+- 已发布：release `v1.6.2`（Latest），资产名固定为 `dsh-deepseek-site.tgz`（不带版本号，`releases/latest/download/` 永久可用）
+- 本机状态：profile `desktop`（`C:\Users\15139\.dsh\profiles\desktop`）依赖本地 tarball 装的 `dsh-deepseek-site@1.6.2`，`dsh.profile.bundles` 里有 `dsh-deepseek-site`，已 `applied`
 - 目标用户场景：Windows + DSH 桌面版；Web 版没有 `window.dshDesktop.browser`，会显示「不支持」卡片
 
 ## 2. 架构要点（改代码前必须知道）
@@ -75,11 +75,11 @@
 | `cordis.patch.yml` | 把 `deepseek-site` 插进 profile 的 bundle 列表 |
 | `test-signin.cjs`（10.1 KB） | 单测：从 `client.js` 切出 `const SITE_URL` → `const zh = {` 之间，在 `localStorage` stub 下跑 |
 | `publish/build-index.mjs` | 生成 format 1 市场索引（内联 icon、钉 commit、`--index-url`），用 `market-index-validator.mjs` 校验 |
-| `publish/index.json` | 生成的索引（当前钉在 `c4dc42f`，插件版本 1.6.1） |
+| `publish/index.json` | 生成的索引（当前钉在 `31cae71`，插件版本 1.6.2） |
 | `publish/RELEASE.md` | 发布清单：预检、push、生成索引、收录 awesome、常见安装失败、版本升级 |
 | `publish/WJMACTD__dsh-deepseek-site.yml` | awesome-dsh-plugin 的收录条目（category `ui`，icon 用 180px PNG raw，tarball 用 latest 链接） |
-| `README.md` | 用户视角：功能、和同类插件对比、安装、隐私与凭据、文件表、更新日志 |
-| `docs/architecture.md` | 时序图与状态机：点开入口、切走保活、重启回填、容器结构、7 条不变量 |
+| `README.md` | 用户视角：功能、登录记忆、隐私与凭据、文件表、安装 / 更新 |
+| `docs/architecture.md` | 时序图与状态机：点开入口、切走保活、重启回填、容器结构、8 条不变量 |
 | `docs/pitfalls.md` | 本机环境坑速查（13 条，带症状/判断/命令） |
 
 ## 4. 开发与验证
@@ -97,7 +97,7 @@ node -e "JSON.parse(require('fs').readFileSync('locale/zh.json','utf8'))"   # lo
 plugin_manager action=install_bundle target="git+https://github.com/WJMACTD/dsh-deepseek-site.git#<sha>"
 # 或本地打包后装 tarball（不产生 junction，适合快速试）：
 npm pack --pack-destination .dsh-tmp --cache .dsh-tmp/npm-cache
-plugin_manager action=install_bundle target="D:\Project\AI Project\dsh-deepseek-site\.dsh-tmp\dsh-deepseek-site-1.6.1.tgz"
+plugin_manager action=install_bundle target="D:\Project\AI Project\dsh-deepseek-site\.dsh-tmp\dsh-deepseek-site-1.6.2.tgz"
 ```
 
 装完不用重启：`application: applied` 会热重载客户端半。**验证注册**用
